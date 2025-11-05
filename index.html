@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Script Cleaner - AI TTS Converter</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📝 Script Cleaner</h1>
+            <p class="subtitle">Convert Wisdom Scripts to AI TTS Format</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Left Panel: Input -->
+            <div class="panel input-panel">
+                <div class="panel-header">
+                    <h2>📋 Original Script</h2>
+                    <span class="word-count" id="inputCount">0 words</span>
+                </div>
+                <textarea 
+                    id="inputText" 
+                    placeholder="Paste your Wisdom script here...
+
+Example:
+# [B] Why Smiling Makes You Happy
+
+**Category:** 🧠 Psychology
+**Level:** Beginner
+---
+
+[image1: Close-up of genuine smile]
+**HOOK**
+|| Have you ever noticed that when you smile...
+|| This isn't just in your mind..."
+                ></textarea>
+                <button class="btn-convert" id="convertBtn">
+                    <span class="btn-text">Convert to Clean Script</span>
+                    <span class="btn-icon">→</span>
+                </button>
+            </div>
+
+            <!-- Right Panel: Output -->
+            <div class="panel output-panel">
+                <div class="panel-header">
+                    <h2>✨ Clean Script (AI TTS)</h2>
+                    <span class="word-count" id="outputCount">0 words</span>
+                </div>
+                <textarea 
+                    id="outputText" 
+                    placeholder="Clean script will appear here..."
+                    readonly
+                ></textarea>
+                <div class="output-actions">
+                    <button class="btn-copy" id="copyBtn">
+                        <span class="btn-icon">📋</span>
+                        <span class="btn-text">Copy to Clipboard</span>
+                    </button>
+                    <button class="btn-download" id="downloadBtn">
+                        <span class="btn-icon">💾</span>
+                        <span class="btn-text">Download .txt</span>
+                    </button>
+                </div>
+                <div class="copy-notification" id="copyNotification">
+                    ✅ Copied to clipboard!
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Made for <strong>Wisdom of the World</strong> by Roy 🌍</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
