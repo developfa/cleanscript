@@ -17,27 +17,30 @@ function cleanScript(text) {
     let cleaned = text;
     
     // 1. Remove metadata section (between first --- and second ---)
-    cleaned = cleaned.replace(/^---[\s\S]*?---\n*/m, '');
+    cleaned = cleaned.replace(/^---[\s\S]*?---\s*/m, '');
     
-    // 2. Remove all markdown headers (##, ###, etc.)
+    // 2. Remove [imageN: ...] lines (handles both single and multi-line)
+    cleaned = cleaned.replace(/\[image\d+:.*?\]/g, '');
+    
+    // 3. Remove all markdown headers (##, ###, etc.)
     cleaned = cleaned.replace(/^#{1,6}\s+.*$/gm, '');
     
-    // 3. Remove [imageN: ...] lines completely
-    cleaned = cleaned.replace(/^\[image\d+:.*\]$/gm, '');
+    // 4. Remove lines that start with ** (section headers)
+    cleaned = cleaned.replace(/^\*\*[A-Z\s&-]+\*\*$/gm, '');
     
-    // 4. Remove || subtitle separators
+    // 5. Remove || subtitle separators at start of lines
     cleaned = cleaned.replace(/^\|\|\s*/gm, '');
     
-    // 5. Remove **bold** markers but keep the text
+    // 6. Remove remaining **bold** markers but keep the text
     cleaned = cleaned.replace(/\*\*(.*?)\*\*/g, '$1');
     
-    // 6. Remove empty lines at the start of sections
-    cleaned = cleaned.replace(/^\s*\n/gm, '');
+    // 7. Remove lines with only --- or ===
+    cleaned = cleaned.replace(/^[-=]+$/gm, '');
     
-    // 7. Replace multiple consecutive newlines with double newline
+    // 8. Remove extra blank lines (3+ newlines become 2)
     cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
     
-    // 8. Trim leading and trailing whitespace
+    // 9. Trim leading and trailing whitespace
     cleaned = cleaned.trim();
     
     return cleaned;
