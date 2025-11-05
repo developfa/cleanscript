@@ -8,40 +8,63 @@ const inputCount = document.getElementById('inputCount');
 const outputCount = document.getElementById('outputCount');
 const copyNotification = document.getElementById('copyNotification');
 
-// Clean Script Function
+// Clean Script Function - Extract ONLY the spoken content
 function cleanScript(text) {
     if (!text.trim()) {
         return '';
     }
     
-    let cleaned = text;
+    console.log('Starting cleaning process...');
     
-    // 1. Remove metadata section (between first --- and second ---)
-    cleaned = cleaned.replace(/^---[\s\S]*?---\s*/m, '');
+    // Split into lines
+    let lines = text.split('\n');
+    let paragraphs = [];
+    let currentParagraph = [];
     
-    // 2. Remove [imageN: ...] lines (handles both single and multi-line)
-    cleaned = cleaned.replace(/\[image\d+:.*?\]/g, '');
+    // Process line by line
+    for (let i = 0; i < lines.length; i++) {
+        let line = lines[i].trim();
+        
+        // If it's an empty line, it marks a paragraph boundary
+        if (line === '') {
+            if (currentParagraph.length > 0) {
+                // Join current paragraph and add to results
+                let paragraphText = currentParagraph.join(' ');
+                // Clean up multiple spaces within paragraph
+                paragraphText = paragraphText.replace(/\s+/g, ' ').trim();
+                paragraphs.push(paragraphText);
+                currentParagraph = [];
+            }
+            continue;
+        }
+        
+        // If line starts with ||, extract the content
+        if (line.startsWith('||')) {
+            let content = line.substring(2).trim(); // Remove || and spaces
+            
+            // Remove **bold** markers (like **Tip 1:**, **HOOK**, etc.)
+            content = content.replace(/\*\*(.*?)\*\*/g, '$1');
+            
+            if (content.length > 0) {
+                currentParagraph.push(content);
+            }
+        }
+        // Skip lines that don't start with || (image tags, headers, etc.)
+    }
     
-    // 3. Remove all markdown headers (##, ###, etc.)
-    cleaned = cleaned.replace(/^#{1,6}\s+.*$/gm, '');
+    // Add any remaining paragraph
+    if (currentParagraph.length > 0) {
+        let paragraphText = currentParagraph.join(' ');
+        paragraphText = paragraphText.replace(/\s+/g, ' ').trim();
+        paragraphs.push(paragraphText);
+    }
     
-    // 4. Remove lines that start with ** (section headers)
-    cleaned = cleaned.replace(/^\*\*[A-Z\s&-]+\*\*$/gm, '');
+    console.log('Total paragraphs:', paragraphs.length);
     
-    // 5. Remove || subtitle separators at start of lines
-    cleaned = cleaned.replace(/^\|\|\s*/gm, '');
+    // Join paragraphs with blank line (double newline)
+    let cleaned = paragraphs.join('\n\n');
     
-    // 6. Remove remaining **bold** markers but keep the text
-    cleaned = cleaned.replace(/\*\*(.*?)\*\*/g, '$1');
-    
-    // 7. Remove lines with only --- or ===
-    cleaned = cleaned.replace(/^[-=]+$/gm, '');
-    
-    // 8. Remove extra blank lines (3+ newlines become 2)
-    cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
-    
-    // 9. Trim leading and trailing whitespace
-    cleaned = cleaned.trim();
+    console.log('Final output length:', cleaned.length);
     
     return cleaned;
 }
@@ -62,16 +85,25 @@ function updateWordCount(element, text) {
 
 // Convert Button Handler
 convertBtn.addEventListener('click', () => {
+    console.log('Convert button clicked!');
+    
     const input = inputText.value;
+    console.log('Input length:', input.length);
+    
+    if (!input.trim()) {
+        alert('Please paste a script first!');
+        return;
+    }
+    
     const cleaned = cleanScript(input);
+    console.log('Cleaned length:', cleaned.length);
+    
     outputText.value = cleaned;
     updateWordCount(outputCount, cleaned);
     
-    // Add animation
-    outputText.style.animation = 'none';
-    setTimeout(() => {
-        outputText.style.animation = 'fadeIn 0.5s';
-    }, 10);
+    if (cleaned.length === 0) {
+        alert('No content found! Make sure your script has lines starting with ||');
+    }
 });
 
 // Copy Button Handler
@@ -87,6 +119,7 @@ copyBtn.addEventListener('click', async () => {
         await navigator.clipboard.writeText(text);
         showCopyNotification();
     } catch (err) {
+        console.error('Copy failed:', err);
         // Fallback for older browsers
         outputText.select();
         document.execCommand('copy');
@@ -111,11 +144,9 @@ downloadBtn.addEventListener('click', () => {
         return;
     }
     
-    // Create filename from first line or use default
-    const firstLine = text.split('\n')[0].slice(0, 50);
-    const filename = firstLine 
-        ? `${firstLine.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.txt`
-        : 'clean_script.txt';
+    // Create filename
+    const timestamp = new Date().toISOString().slice(0, 10);
+    const filename = `clean_script_${timestamp}.txt`;
     
     // Create blob and download
     const blob = new Blob([text], { type: 'text/plain' });
@@ -141,32 +172,12 @@ document.addEventListener('keydown', (e) => {
         e.preventDefault();
         convertBtn.click();
     }
-    
-    // Ctrl/Cmd + C when output is focused
-    if ((e.ctrlKey || e.metaKey) && e.key === 'c' && document.activeElement === outputText) {
-        copyBtn.click();
-    }
 });
-
-// Add CSS animation
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-`;
-document.head.appendChild(style);
 
 // Initialize
 updateWordCount(inputCount, inputText.value);
 updateWordCount(outputCount, outputText.value);
 
-console.log('✅ Script Cleaner initialized!');
-console.log('💡 Tip: Press Ctrl+Enter (Cmd+Enter on Mac) to convert quickly!');
+console.log('✅ Script Cleaner v5.1 initialized!');
+console.log('💡 Preserves paragraph spacing between meaning blocks');
+console.log('💡 Press Ctrl+Enter to convert quickly!');
